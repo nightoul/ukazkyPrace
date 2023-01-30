@@ -1,0 +1,274 @@
+{templateType Erp\Helper\General\Template\LiveTemplate}
+{varType Erp\Model\Requests\RequestsEntity[] $items}
+
+{block content}
+
+<link href="https://cdn.syncfusion.com/ej2/20.2.43/material.css" rel="stylesheet" type="text/css"/>
+
+<div class="col-md-12">
+	{form ganttForm}
+		<div id="ganttSubmitBtn">
+			<button n:name="submit" id="submitGantt" class="hidden mb5 btn btn-success btn-addon m-r-xs">
+				<i class="fa fa-save"></i> {_"adm_save"}
+			</button>
+		</div>
+	{/form}
+	<div id="Gantt"></div>
+</div>
+
+<script src="https://cdn.syncfusion.com/ej2/20.2.43/dist/ej2.min.js" type="text/javascript"></script>
+<script>
+	document.querySelector('.page-title').classList.add('hide');
+	// licence
+	ej.base.registerLicense('ORg4AjUWIQA/Gnt2VVhiQlFadVlJXGFWfVJpTGpQdk5xdV9DaVZUTWY/P1ZhSXxRdk1hXX9ddXFRT2hfVEA=');
+
+	// culture
+	function loadCultureFiles() {
+		let files = ['ca-gregorian.json', 'numbers.json'];
+		let loadCulture = function (prop) {
+			let val, ajax;
+			ajax = new ej.base.Ajax('/plugins/cldr-data/main/' + {$language->id} + '/' + files[prop], 'GET', false);
+			ajax.onSuccess = function (value) {
+				val = value;
+			};
+			ajax.send();
+			ej.base.loadCldr(JSON.parse(val));
+		};
+		for (let prop = 0; prop < files.length; prop++) {
+			loadCulture(prop);
+		}
+	}
+	loadCultureFiles();
+
+	let translations = {
+		'cs': {
+			"id": "Identifikátor",
+			"name": "Úkol",
+			"startDate": "Datum zahájení",
+			"endDate": "Datum ukončení",
+			"duration": "Trvání",
+			"dependency": "Vazba",
+			"progress": "Postup procent",
+			"day": "den",
+			"days": "dní",
+			"task": " úkol",
+			"tasks": " úkoly",
+			"add": "Přidat",
+			"edit": "Editovat",
+			"expandAll": "Rozbalit",
+			"collapseAll": "Sbalit",
+			"addDialogTitle": "Přidat úkol",
+			"editDialogTitle": "Informace o úkolu",
+			"generalTab": "Úkol",
+			"saveGantt": "Uložit",
+			"addNewTask": "Nový úkol",
+			"zoomIn": "Přiblížit",
+			"zoomOut": "Oddálit",
+			"zoomToFit": "Zarovnat zoom",
+			"cancel": "Zavřít",
+			"enterValue": "Vložte hodnotu",
+			"search": "Hledat",
+			"type": "Typ vazby",
+			"delete": "Smazat",
+			"custom": {
+				'task': 'Úkol',
+				'dependency': 'Vazba',
+				'goToTask': 'Přejít na úkol',
+				'week': 'Týden',
+				'month': 'Měsíc',
+				'year': 'Rok',
+				"exportPdf": "Export PDF",
+			}
+		},
+		'en': {
+			"id": "Identifier",
+			"name": "Task",
+			"startDate": "Start date",
+			"endDate": "End date",
+			"duration": "Duration",
+			"dependency": "Relation",
+			"progress": "Percent",
+			"day": "day",
+			"days": "days",
+			"task": " task",
+			"tasks": " tasks",
+			"add": "Add",
+			"edit": "Edit",
+			"expandAll": "Expand",
+			"collapseAll": "Collapse",
+			"addDialogTitle": "Add task",
+			"editDialogTitle": "Task info",
+			"generalTab": "Task",
+			"saveGantt": "Save",
+			"addNewTask": "New task",
+			"zoomIn": "Zoom in",
+			"zoomOut": "Zoom out",
+			"zoomToFit": "Zoom to fit",
+			"cancel": "Close",
+			"enterValue": "Enter value",
+			"search": "Search",
+			"type": "Relation type",
+			"delete": "Delete",
+			"custom": {
+				'task': 'Task',
+				'dependency': 'Relation',
+				'goToTask': 'Go to task',
+				'week': 'Week',
+				'month': 'Month',
+				'year': 'Year',
+				"exportPdf": "Export PDF",
+			}
+		}
+	};
+
+	let sweetAlertTranslations = {
+		"cs": {"heading": "Neuložené změny", "text": "Chcete pokračovat bez uložení změn?", "okay": "Ano, pokračovat", "cancel": "Zrušit"},
+		"en": {"heading": "Unsaved changes", "text": "Do you want to continue without saving the changes?", "okay": "Yes, continue", "cancel": "Cancel"},
+	};
+
+	ej.base.L10n.load({
+		'cs': {'gantt': translations.cs}, 'en': {'gantt': translations.en}, 'pl': {'gantt': translations.pl}, 'sk': {'gantt': translations.sk}, 'de': {'gantt': translations.de}, 'fr': {'gantt': translations.fr}, 'ru': {'gantt': translations.ru}, 'uk': {'gantt': translations.uk}
+	});
+
+	// render data
+	let isGanttDataUpdated = false;
+	let ganttChart = new ej.gantt.Gantt({
+		dataSource: {$ganttData |noescape},
+		height: 'Auto',
+		taskMode : 'Auto',
+		locale: {$language->id},
+		splitterSettings: {
+			columnIndex: 4
+		},
+		columns: [
+			{ field: 'TaskID', width: '150' },
+			{ field: 'TaskName', width: '230' },
+			{ field: 'StartDate', width: '180' },
+			{ field: 'Duration', width: '150' },
+			{ field: 'Progress', width: '120', }
+		],
+		taskFields: {
+			id: 'TaskID',
+			name: 'TaskName',
+			startDate: 'StartDate',
+			duration: 'Duration',
+			progress: 'Progress',
+			dependency: 'Predecessor',
+			child: 'subtasks',
+		},
+		allowFiltering: true,
+		allowPdfExport: true,
+		allowReordering: true,
+		allowResizing: true,
+		allowSorting: true,
+		enableCriticalPath: false,
+		enableVirtualization: true,
+		renderBaseline: true,
+		editSettings: {
+			allowAdding: true,
+			allowEditing: true,
+			allowDeleting: false,
+			allowTaskbarEditing: true,
+			mode: 'Dialog'
+		},
+		filterSettings: {
+			type: 'Menu'
+		},
+		timelineSettings: { timelineViewMode: 'Week', weekStartDay: 1 },
+		tooltipSettings:{ showTooltip: true },
+		toolbar: [
+			{ text: translations[ {$language->id} ].saveGantt, id: 'saveGantt', align: 'Left' },
+			{ text: translations[ {$language->id} ].addNewTask, id: 'addTask', align: 'Left' },
+			'',
+			'',
+			{ text: 'Search', align: 'Left'},
+			'ExpandAll',
+			'CollapseAll',
+			{ text: 'ZoomIn', align: 'Right' },
+			{ text: 'ZoomOut', align: 'Right' },
+			{ text: 'ZoomToFit', align: 'Right' },
+			{ text: '', align: 'Right' },
+			{ text: translations[ {$language->id} ].custom.week, id: 'Week', align: 'Right'},
+			{ text: translations[ {$language->id} ].custom.month, id: 'Month', align: 'Right' },
+			{ text: translations[ {$language->id} ].custom.year, id: 'Year', align: 'Right' },
+			{*{ text: translations[ {$language->id} ].custom.exportPdf, id: 'exportPdf', align: 'Right' },*}
+		],
+		toolbarClick: (args) => {
+			if (args.item.id === 'saveGantt') {
+				// populate hidden form input with gantt data
+				$('input[name="gantt_data"]').val(JSON.stringify(ganttChart.updatedRecords));
+				$('#submitGantt').click();
+			}
+			if (args.item.id === 'addTask') {
+				if (isGanttDataUpdated) {
+					Swal.fire({
+						title: sweetAlertTranslations[ {$language->id} ].heading,
+						text: sweetAlertTranslations[ {$language->id} ].text,
+						width: 500,
+						padding: '3em',
+						position: 'top-center',
+						icon: 'warning',
+						showCancelButton: true,
+						confirmButtonColor: '#fcc600',
+						confirmButtonText: sweetAlertTranslations[ {$language->id} ].okay,
+						cancelButtonText: sweetAlertTranslations[ {$language->id} ].cancel,
+					}).then((result) => {
+						if (result.isConfirmed) {
+							location.href = {plink new}; // redirect to task new page
+						}
+					})
+				} else {
+					location.href = {plink new}; // redirect to task new page
+				}
+			}
+			if (args.item.id === 'exportPdf') {
+				console.log(ganttChart.pdfExportModule.helper);
+				ganttChart.pdfExport( {
+					pageOrientation: 'Landscape',
+					showPredecessorLines: true,
+				});
+			}
+			if (['Week', 'Month', 'Year'].includes(args.item.id)) {
+				ganttChart.timelineSettings.timelineViewMode = args.item.id;
+			}
+		},
+		actionBegin: (args) => {
+			if (args.requestType === 'beforeOpenEditDialog') { // disable opening the default dialog box
+				args.cancel = true;
+				if (!ganttChart.selectionModule.getSelectedRecords()[0].taskData.isProject) {
+					if (isGanttDataUpdated) {
+						Swal.fire({
+							title: sweetAlertTranslations[ {$language->id} ].heading,
+							text: sweetAlertTranslations[ {$language->id} ].text,
+							width: 500,
+							padding: '3em',
+							position: 'top-center',
+							icon: 'warning',
+							showCancelButton: true,
+							confirmButtonColor: '#fcc600',
+							confirmButtonText: sweetAlertTranslations[ {$language->id} ].okay,
+							cancelButtonText: sweetAlertTranslations[ {$language->id} ].cancel,
+						}).then((result) => {
+							if (result.isConfirmed) {
+								// redirect to task edit page + disable redirect if project is selected
+								location.href = {plink edit}+'/'+ganttChart.selectionModule.getSelectedRecords()[0].taskData.TaskID;
+							}
+						})
+					} else {
+						// redirect to task edit page + disable redirect if project is selected
+						location.href = {plink edit}+'/'+ganttChart.selectionModule.getSelectedRecords()[0].taskData.TaskID;
+					}
+				}
+			}
+		},
+		actionComplete: (args) => {
+			if (!['refresh', 'searching', 'scroll', 'filterafteropen', 'AfterZoomIn', 'AfterZoomOut', 'AfterZoomToProject'].includes(args.requestType)) {
+				isGanttDataUpdated = true;
+			}
+			// populate form input with gantt data
+			$('input[name="gantt_data"]').val(JSON.stringify(ganttChart.updatedRecords));
+		}
+	});
+	ganttChart.appendTo('#Gantt');
+
+</script>
